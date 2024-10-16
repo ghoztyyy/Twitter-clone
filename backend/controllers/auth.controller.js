@@ -45,6 +45,48 @@ export const register = async (req, res) => {
             });
         }
     } catch (error) {
-        console.log(error);
+        console.log("error in register");
+    }
+};
+
+export const login = async (req, res) => {
+    //get the usrname/email and password from body
+    //validate and then authenticate
+    //if success then generate and verify cookie
+    try {
+        const { userName, password } = req.body;
+        if (!userName || !password) {
+            return res.status(404).json("pls enter all details");
+        }
+        const user = await User.findOne({ userName });
+        if (!user) {
+            return res.json("user not found");
+        }
+        if (bcrypt.compare(password, user.password)) {
+            generateToken(user._id, res);
+            res.json("login successfull");
+        }
+    } catch (error) {
+        console.log("error in login");
+    }
+};
+
+export const logout = async (req, res) => {
+    try {
+        res.cookie("jwt", "", { maxAge: 0 });
+        res.status(200).json({ message: "Logged out successfully" });
+    } catch (error) {
+        console.log("Error in logout controller", error.message);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
+export const getMe = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select("-password");
+        res.status(200).json(user);
+    } catch (error) {
+        console.log("Error in getMe controller", error.message);
+        res.status(500).json({ error: "Internal Server Error" });
     }
 };
