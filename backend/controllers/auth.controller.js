@@ -1,7 +1,7 @@
 import User from "../model/user.model.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../lib/utils/generateToken.js";
-export const register = async (req, res) => {
+export const signup = async (req, res) => {
     //take info from user - userName, fullName ,email,password,
     //validate the data
     //check email using regex
@@ -21,10 +21,14 @@ export const register = async (req, res) => {
         const existedEmail = await User.findOne({ email });
 
         if (existedEmail) {
-            return res.json("user already exists");
+            return res.status(400).json({ error: "Email is already taken" });
             //redirect to login
         }
-
+        if (password.length < 6) {
+            return res
+                .status(400)
+                .json({ error: "Password must be at least 6 characters long" });
+        }
         //password hashing
         const hashedPassword = await bcrypt.hash(password, 8);
 
@@ -37,15 +41,24 @@ export const register = async (req, res) => {
 
         //jwt authentication
         if (newUser) {
-            generateToken(newUser._id, res);
+            generateTokenAndSetCookie(newUser._id, res);
             await newUser.save();
+
             res.status(201).json({
                 _id: newUser._id,
                 fullName: newUser.fullName,
+                username: newUser.username,
+                email: newUser.email,
+                followers: newUser.followers,
+                following: newUser.following,
+                profileImg: newUser.profileImg,
+                coverImg: newUser.coverImg,
             });
+        } else {
+            res.status(400).json({ error: "Invalid user data" });
         }
     } catch (error) {
-        console.log("error in register");
+        console.log(error);
     }
 };
 
