@@ -17,7 +17,7 @@ cloudinary.config({
 
 const app = express();
 
-app.use(express.json());
+app.use(express.json({ limit: "5mb" })); // to parse req.body
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/api/auth", authRoutes);
